@@ -126,8 +126,13 @@ class UltimateBoard:
         if self.winner:
             return False
         
-        if self.next_board and (board_row, board_col) != self.next_board:
-            return False
+        if self.next_board:
+            if self.meta_board[self.next_board[0]][self.next_board[1]] != '' or \
+            self.boards[self.next_board[0]][self.next_board[1]].is_full():
+                self.next_board = None
+
+            elif (board_row, board_col) != self.next_board:
+                return False
         
         board = self.boards[board_row][board_col]
         if board.make_move(cell_row, cell_col, self.current_player):
@@ -135,7 +140,8 @@ class UltimateBoard:
                 self.meta_board[board_row][board_col] = board.winner
                 self.check_global_winner()
 
-            if self.boards[cell_row][cell_col].is_full():
+            target_board = self.boards[cell_row][cell_col]
+            if target_board.is_full() or target_board.winner:
                 self.next_board = None
             else:
                 self.next_board = (cell_row, cell_col)
@@ -147,17 +153,17 @@ class UltimateBoard:
     def check_global_winner(self):
         lines = self.meta_board + [list(col) for col in zip(*self.meta_board)]
         lines.append([self.meta_board[i][i] for i in range(3)])
-        lines.append([self.meta_board[i][2-i] for i in range(3)])
+        lines.append([self.meta_board[i][2 - i] for i in range(3)])
 
         for line in lines:
             if line[0] in ('X', 'O') and all(cell == line[0] for cell in line):
-                self.winner = 'D'
+                self.winner = line[0]
     
     def get_valid_moves(self) -> List[Tuple[int, int, int, int]]:
         moves = []
         if self.winner:
             return moves
-        if self.next_board:
+        if self.next_board and self.meta_board[self.next_board[0]][self.next_board[1]] == '':
             r, c = self.next_board
             for cell in self.boards[r][c].get_available_moves():
                 moves.append((r, c, cell[0], cell[1]))
@@ -186,9 +192,12 @@ class UltimateBoard:
             if i < 2:
                 full.append('-'* 29)
         print('\n'.join(full))
-        print(f"Next Plaer: {self.current_player}")
+        print(f"Next Player: {self.current_player}")
         if self.next_board:
-            print(f"recommended to play in board: {self.next_board}")
+            r,c = self.next_board
+            if self.meta_board[r][c] == '' and not self.boards[r][c].is_full():
+                print(f"Recommended to play in board: {self.next_board}")
+
         if self.winner:
             print(f"Game over! Winner: {self.winner}")
 
@@ -201,7 +210,7 @@ def play_game():
         if game.current_player == 'X':
             print("your turn. Enter: board_row board_col cell_row cell_col")
             move = input("> ").strip()
-            if move.lower() == '1':
+            if move.lower() in ('exit','quit'):
                 print("Exiting game")
                 break
             try:
@@ -209,7 +218,7 @@ def play_game():
                 if (br,bc, cr, cc) in game.get_valid_moves():
                     game.make_move(br, bc, cr, cc)
                 else:
-                    print("invalid move")
+                    print("Invalid move")
 
             except ValueError:
                 print("Invalid input")
@@ -229,4 +238,3 @@ def play_game():
 
 if __name__ == "__main__":
     play_game()
-
