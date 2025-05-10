@@ -4,11 +4,12 @@ to run: python3 main.py
 ---
 
 ## Project Layout
+```
 481/
 ├── main.py                    # Application entry point
 ├── ultimate_tic_tac_toe.py    # Game rules, board logic, and AI
 ├── gui.py                     # GUI layout and interaction using pygames
-
+```
 ---
 
 ## File Descriptions
